@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { mintNFT, getTotalSupply } from '../services/nft.service';
 import { ethers } from 'ethers';
+import { backendSigner } from '../config';
 
 const router = Router();
 
@@ -26,12 +27,12 @@ router.post('/mint', async (req, res) => {
       });
     }
 
-    // In a real implementation, you would get the signer from the request
-    // For now, we'll just return a placeholder response
+    const transactionHash = await mintNFT(recipient, backendSigner);
+
     res.status(200).json({
       message: 'NFT minted successfully',
       recipient: recipient,
-      transactionHash: '0x...',
+      transactionHash,
       status: 'success'
     });
   } catch (error) {
@@ -45,10 +46,10 @@ router.post('/mint', async (req, res) => {
 // Get total supply of NFTs
 router.get('/totalSupply', async (req, res) => {
   try {
-    // In a real implementation, we would call the service method
-    // For now, return a placeholder response
+    const totalSupply = await getTotalSupply();
+
     res.status(200).json({
-      totalSupply: 0
+      totalSupply
     });
   } catch (error) {
     res.status(500).json({

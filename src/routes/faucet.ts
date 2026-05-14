@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { requestFunds, getFaucetBalance } from '../services/faucet.service';
+import { backendSigner } from '../config';
 
 const router = Router();
 
@@ -10,11 +11,11 @@ function getErrorMessage(error: unknown): string {
 // Request funds from faucet
 router.post('/request', async (req, res) => {
   try {
-    // In a real implementation, you would validate the request and get the signer from the request
-    // For now, we'll just return a placeholder response
+    const transactionHash = await requestFunds(backendSigner);
+
     res.status(200).json({
       message: 'Funds requested successfully',
-      transactionHash: '0x...',
+      transactionHash,
       status: 'success'
     });
   } catch (error) {
