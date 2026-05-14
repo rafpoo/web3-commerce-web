@@ -1,0 +1,5 @@
+
+> web3-api@1.0.0 dev
+> ts-node src/index.ts
+
+Server running on port 3000
