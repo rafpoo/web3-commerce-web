@@ -5,6 +5,7 @@ import { NFT_ABI } from './abis';
 type NFTContract = ethers.BaseContract & {
   tokenCounter: () => Promise<bigint>;
   mintNFT: (to: string) => Promise<ContractTransactionResponse>;
+  mintBatch: (recipients: string[]) => Promise<ContractTransactionResponse>;
 };
 
 // Create NFT contract instance
@@ -44,6 +45,25 @@ export async function mintNFT(to: string, signer: ethers.Signer): Promise<string
     return receipt?.hash ?? transaction.hash;
   } catch (error) {
     console.error('Error minting NFT:', error);
+    throw error;
+  }
+}
+
+/**
+ * Mint multiple NFTs in one transaction.
+ * @param recipients Recipient addresses
+ * @param signer Wallet signer instance
+ * @returns Promise<string> Transaction hash
+ */
+export async function mintBatchNFT(recipients: string[], signer: ethers.Signer): Promise<string> {
+  try {
+    const nftContractWithSigner = nftContract.connect(signer) as unknown as NFTContract;
+    const transaction = await nftContractWithSigner.mintBatch(recipients);
+    const receipt = await transaction.wait();
+
+    return receipt?.hash ?? transaction.hash;
+  } catch (error) {
+    console.error('Error batch minting NFTs:', error);
     throw error;
   }
 }

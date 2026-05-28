@@ -1,24 +1,60 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract OptimizedNFT is ERC721, Ownable {
+contract MyNFT is ERC721, Ownable {
+    error EmptyRecipients();
+
     uint256 public tokenCounter;
 
-    constructor() ERC721("OptimizedNFT", "ONFT") {}
+    constructor() ERC721("MyNFT", "MNFT") Ownable(msg.sender) {}
 
-    function mintNFT(address to) public onlyOwner {
-        _safeMint(to, tokenCounter);
-        tokenCounter++;
+    function mintNFT(address to) external onlyOwner {
+        uint256 tokenId = tokenCounter;
+        _safeMint(to, tokenId);
+
+        unchecked {
+            tokenCounter = tokenId + 1;
+        }
     }
 
-    // Optimized function with batch minting support
-    function mintBatch(address[] memory recipients) public onlyOwner {
-        for (uint i = 0; i < recipients.length; i++) {
-            _safeMint(recipients[i], tokenCounter);
-            tokenCounter++;
+    function mintBatch(address[] calldata recipients) external onlyOwner {
+        uint256 length = recipients.length;
+        if (length == 0) {
+            revert EmptyRecipients();
         }
+
+        uint256 tokenId = tokenCounter;
+        for (uint256 i = 0; i < length; ) {
+            _safeMint(recipients[i], tokenId);
+
+            unchecked {
+                ++i;
+                ++tokenId;
+            }
+        }
+
+        tokenCounter = tokenId;
+    }
+
+    function mintBatchUnsafeEOA(address[] calldata recipients) external onlyOwner {
+        uint256 length = recipients.length;
+        if (length == 0) {
+            revert EmptyRecipients();
+        }
+
+        uint256 tokenId = tokenCounter;
+        for (uint256 i = 0; i < length; ) {
+            _mint(recipients[i], tokenId);
+
+            unchecked {
+                ++i;
+                ++tokenId;
+            }
+        }
+
+        tokenCounter = tokenId;
     }
 }

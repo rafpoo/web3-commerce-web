@@ -2,30 +2,36 @@
 pragma solidity ^0.8.20;
 
 contract Faucet {
+    error CooldownActive(uint256 nextAccessTime);
+    error InsufficientBalance(uint256 available, uint256 required);
+    error TransferFailed();
 
     mapping(address => uint256) public lastAccessTime;
-    uint256 public withdrawalAmount = 0.01 ether;
-    uint256 public cooldown = 1 minutes;
+    uint256 public constant withdrawalAmount = 0.01 ether;
+    uint256 public constant cooldown = 1 minutes;
 
     // menerima ETH
     receive() external payable {}
 
-    function requestFunds() public {
-        require(
-            block.timestamp >= lastAccessTime[msg.sender] + cooldown,
-            "Wait before requesting again"
-        );
+    function requestFunds() external {
+        uint256 nextAccessTime = lastAccessTime[msg.sender] + cooldown;
+        if (block.timestamp < nextAccessTime) {
+            revert CooldownActive(nextAccessTime);
+        }
 
-        require(
-            address(this).balance >= withdrawalAmount,
-            "Not enough balance"
-        );
+        uint256 balance = address(this).balance;
+        if (balance < withdrawalAmount) {
+            revert InsufficientBalance(balance, withdrawalAmount);
+        }
 
         lastAccessTime[msg.sender] = block.timestamp;
-        payable(msg.sender).transfer(withdrawalAmount);
+        (bool sent, ) = payable(msg.sender).call{value: withdrawalAmount}("");
+        if (!sent) {
+            revert TransferFailed();
+        }
     }
 
-    function getBalance() public view returns(uint256){
+    function getBalance() external view returns(uint256){
         return address(this).balance;
     }
 }

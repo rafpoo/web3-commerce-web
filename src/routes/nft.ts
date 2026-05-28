@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { mintNFT, getTotalSupply } from '../services/nft.service';
+import { mintBatchNFT, mintNFT, getTotalSupply } from '../services/nft.service';
 import { ethers } from 'ethers';
 import { backendSigner } from '../config';
 
@@ -38,6 +38,42 @@ router.post('/mint', async (req, res) => {
   } catch (error) {
     res.status(500).json({
       error: 'Failed to mint NFT',
+      message: getErrorMessage(error)
+    });
+  }
+});
+
+// Mint multiple NFTs in a single contract transaction
+router.post('/mintBatch', async (req, res) => {
+  try {
+    const { recipients } = req.body;
+
+    if (!Array.isArray(recipients) || recipients.length === 0) {
+      return res.status(400).json({
+        error: 'Recipients must be a non-empty array'
+      });
+    }
+
+    const invalidRecipient = recipients.find((recipient) => !ethers.isAddress(recipient));
+    if (invalidRecipient) {
+      return res.status(400).json({
+        error: 'Invalid recipient address',
+        recipient: invalidRecipient
+      });
+    }
+
+    const transactionHash = await mintBatchNFT(recipients, backendSigner);
+
+    res.status(200).json({
+      message: 'NFT batch minted successfully',
+      recipients,
+      count: recipients.length,
+      transactionHash,
+      status: 'success'
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Failed to batch mint NFTs',
       message: getErrorMessage(error)
     });
   }

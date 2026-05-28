@@ -5,18 +5,59 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contr
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
 
 contract MyNFT is ERC721, Ownable {
+    error EmptyRecipients();
 
     uint256 public tokenCounter;
 
     constructor()
         ERC721("MyNFT", "MNFT")
         Ownable(msg.sender)   
-    {
-        tokenCounter = 0;
+    {}
+
+    function mintNFT(address to) external onlyOwner {
+        uint256 tokenId = tokenCounter;
+        _safeMint(to, tokenId);
+
+        unchecked {
+            tokenCounter = tokenId + 1;
+        }
     }
 
-    function mintNFT(address to) public onlyOwner {
-        _safeMint(to, tokenCounter);
-        tokenCounter++;
+    function mintBatch(address[] calldata recipients) external onlyOwner {
+        uint256 length = recipients.length;
+        if (length == 0) {
+            revert EmptyRecipients();
+        }
+
+        uint256 tokenId = tokenCounter;
+        for (uint256 i = 0; i < length; ) {
+            _safeMint(recipients[i], tokenId);
+
+            unchecked {
+                ++i;
+                ++tokenId;
+            }
+        }
+
+        tokenCounter = tokenId;
+    }
+
+    function mintBatchUnsafeEOA(address[] calldata recipients) external onlyOwner {
+        uint256 length = recipients.length;
+        if (length == 0) {
+            revert EmptyRecipients();
+        }
+
+        uint256 tokenId = tokenCounter;
+        for (uint256 i = 0; i < length; ) {
+            _mint(recipients[i], tokenId);
+
+            unchecked {
+                ++i;
+                ++tokenId;
+            }
+        }
+
+        tokenCounter = tokenId;
     }
 }
