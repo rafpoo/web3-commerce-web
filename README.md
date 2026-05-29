@@ -1,4 +1,6 @@
-# Web3 E-commerce Platform
+# Rafael Nicholas Po
+# 00000092399
+# Individual assignment Blockchain Technologies
 
 This project provides a complete e-commerce platform with Web3 integration, allowing users to shop for digital products and receive NFTs as digital receipts for their purchases.
 
